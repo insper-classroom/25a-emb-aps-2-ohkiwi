@@ -1,6 +1,6 @@
 # Volante para Euro Truck Simulator
 
-![Protótipo do Volante](https://via.placeholder.com/800x400)
+![Protótipo do Volante](volante.png)
 
 ## Descrição do Projeto
 
