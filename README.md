@@ -56,13 +56,8 @@ O volante se comunica com o computador através de **USB** ou **Bluetooth**, uti
 
 ## Hardware Integrado
 
-O controle é totalmente integrado e portátil, contendo:
+?????????????????????????????????
 
-- Microcontrolador ESP32-S3 (dual-core, suporte nativo a USB)
-- Bateria LiPo de 3000mAh com circuito de carregamento
-- Circuito de gerenciamento de energia com indicador de bateria
-- Todo o circuito eletrônico montado na base do volante
-- Caixa impressa em 3D para abrigar todos os componentes
 
 ## Imagens do Projeto
 
@@ -77,7 +72,7 @@ O controle é totalmente integrado e portátil, contendo:
 
 ## Links Úteis
 
-- [Repositório do Firmware](google.com)
+- [Repositório do Firmware](https://google.com)
 
 
 ---
