@@ -1,3 +1,86 @@
-# RP2040 freertos with OLED1
+# Volante para Euro Truck Simulator
 
-basic freertos project, with code quality enabled.
+![Protótipo do Volante](https://via.placeholder.com/800x400)
+
+## Descrição do Projeto
+
+Este projeto consiste no desenvolvimento de um controle customizado em formato de volante para o jogo **Euro Truck Simulator**.
+
+## Jogo
+
+[Euro Truck Simulator 2](https://eurotrucksimulator2.com/) é um simulador de caminhão desenvolvido pela SCS Software que permite aos jogadores dirigir caminhões por uma representação da Europa, entregando cargas de uma cidade para outra. O jogo simula com precisão a direção de caminhões reais, incluindo câmbio manual, limitações de velocidade, consumo de combustível e regulamentos de trânsito.
+
+## Ideia do Controle
+
+Nosso controle é um volante de caminhão em escala reduzida mas com elementos realistas, incluindo:
+
+- Volante com rotação de 900 graus (2.5 voltas completas)
+- Pedais analógicos (acelerador, freio e embreagem)
+- Botões para funções essenciais como luzes, buzina, freio de mão, etc.
+
+## Inputs e Outputs
+
+### Inputs (Sensores)
+
+1. **Entradas Analógicas:**
+   - **2x potenciômetros rotativos** para detectar a rotação do volante e a pressão no pedal do acelerador/freio.
+
+2. **Entradas Digitais:**
+   - Botões para troca de marcha
+   - Botão para o freio de mão
+   - Botão para ligar e desligar o caminhão
+   - Botão de buzina
+   - Botão de luzes
+
+### Outputs (Atuadores)
+
+1. **Feedback Visual:**
+   - Display OLED pequeno para informações do jogo (velocidade, marcha atual)
+
+
+### Outros componentes:
+   - Botão de liga/desliga (status do controle)
+   - LED para indicar status de conexão com o computador
+
+## Protocolo de Comunicação
+
+O volante se comunica com o computador através de **USB** ou **Bluetooth**, utilizando um protocolo simples baseado em pacotes de dados que enviam as informações dos sensores e botões em tempo real. As entradas operam via **interrupções**, garantindo baixa latência e resposta rápida.
+
+## Diagrama de Blocos do Firmware
+
+?????????????????????????????????
+
+### Tasks
+
+?????????????????????????????????
+
+## Hardware Integrado
+
+O controle é totalmente integrado e portátil, contendo:
+
+- Microcontrolador ESP32-S3 (dual-core, suporte nativo a USB)
+- Bateria LiPo de 3000mAh com circuito de carregamento
+- Circuito de gerenciamento de energia com indicador de bateria
+- Todo o circuito eletrônico montado na base do volante
+- Caixa impressa em 3D para abrigar todos os componentes
+
+## Imagens do Projeto
+
+### Design Proposto
+![Design Proposto](https://via.placeholder.com/800x600)
+
+### Protótipo Real
+![Protótipo Real](https://via.placeholder.com/800x600)
+
+### Detalhes Internos
+![Eletrônica Interna](https://via.placeholder.com/800x600)
+
+## Links Úteis
+
+- [Repositório do Firmware](google.com)
+
+
+---
+### Equipe de Desenvolvimento
+- **Henrique Leite dos Santos**
+- **Pedro Henrique Viegas Ribeiro**
