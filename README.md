@@ -47,23 +47,23 @@ Nosso controle é um volante de caminhão em escala reduzida mas com elementos r
 O volante se comunica com o computador através de **USB** ou **Bluetooth**, utilizando um protocolo simples baseado em pacotes de dados que enviam as informações dos sensores e botões em tempo real. As entradas operam via **interrupções**, garantindo baixa latência e resposta rápida.
 
 ## Diagrama de Blocos do Firmware
-![Diagrama de estoques e fluxus](volante.drawio.png)
+![Diagrama de blocos do Firmware](volante.drawio.png)
 
 
 ## Imagens do Projeto
 
 ### Design Proposto
-![Design Proposto](https://via.placeholder.com/800x600)
+!!!
 
 ### Protótipo Real
-![Protótipo Real](https://via.placeholder.com/800x600)
+!!!
 
 ### Detalhes Internos
-![Eletrônica Interna](https://via.placeholder.com/800x600)
+!!!
 
 ## Links Úteis
 
-- [Repositório do Firmware](https://google.com)
+- !!!
 
 
 ---
