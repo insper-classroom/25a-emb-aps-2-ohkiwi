@@ -44,7 +44,7 @@ Nosso controle é um volante de caminhão em escala reduzida mas com elementos r
 
 ## Protocolo de Comunicação
 
-O volante se comunica com o computador através de **USB** ou **Bluetooth**, utilizando um protocolo simples baseado em pacotes de dados que enviam as informações dos sensores e botões em tempo real. As entradas operam via **interrupções**, garantindo baixa latência e resposta rápida.
+O volante se comunica com o computador através de **USB** ou **Bluetooth**, utilizando o protocolo UART que envia as informações dos sensores e botões em tempo real. As entradas operam via **interrupções** da GPIO, garantindo baixa latência e resposta rápida.
 
 ## Diagrama de Blocos do Firmware
 ![Diagrama de blocos do Firmware](volante.drawio.png)
