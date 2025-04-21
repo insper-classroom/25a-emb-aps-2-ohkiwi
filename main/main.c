@@ -1,137 +1,131 @@
-/*
- * LED blink with FreeRTOS
- */
+#include <stdio.h>
+#include <string.h>
+
+#include "pico/stdlib.h"
+#include "hardware/adc.h"
+#include "hardware/uart.h"
+
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
 #include <queue.h>
 
-#include "ssd1306.h"
-#include "gfx.h"
+#define BTN_GEAR_UP_PIN 2
+#define BTN_GEAR_DOWN_PIN 3
+#define BTN_HANDBRAKE_PIN 4
+#define BTN_IGNITION_PIN 5
+#define BTN_HORN_PIN 6
+#define BTN_LIGHTS_PIN 7
+#define LED_IND_PIN 8
+#define ADC_ACCEL_PIN 26
+#define ADC_BRAKE_PIN 27
+#define UART_TX_PIN 0
+#define UART_RX_PIN 1
+#define UART_BAUD_RATE 9600
 
-#include "pico/stdlib.h"
-#include <stdio.h>
 
-const uint BTN_1_OLED = 28;
-const uint BTN_2_OLED = 26;
-const uint BTN_3_OLED = 27;
+QueueHandle_t xQueueInput;
+QueueHandle_t xQueueAction;
+SemaphoreHandle_t xSemaphoreLed;
 
-const uint LED_1_OLED = 20;
-const uint LED_2_OLED = 21;
-const uint LED_3_OLED = 22;
-
-void oled1_btn_led_init(void) {
-    gpio_init(LED_1_OLED);
-    gpio_set_dir(LED_1_OLED, GPIO_OUT);
-
-    gpio_init(LED_2_OLED);
-    gpio_set_dir(LED_2_OLED, GPIO_OUT);
-
-    gpio_init(LED_3_OLED);
-    gpio_set_dir(LED_3_OLED, GPIO_OUT);
-
-    gpio_init(BTN_1_OLED);
-    gpio_set_dir(BTN_1_OLED, GPIO_IN);
-    gpio_pull_up(BTN_1_OLED);
-
-    gpio_init(BTN_2_OLED);
-    gpio_set_dir(BTN_2_OLED, GPIO_IN);
-    gpio_pull_up(BTN_2_OLED);
-
-    gpio_init(BTN_3_OLED);
-    gpio_set_dir(BTN_3_OLED, GPIO_IN);
-    gpio_pull_up(BTN_3_OLED);
+void btn_callback(uint gpio, uint32_t events) {
+    uint32_t pin = gpio;
+    xQueueSendFromISR(xQueueInput, &pin, 0);
 }
 
-void oled1_demo_1(void *p) {
-    printf("Inicializando Driver\n");
-    ssd1306_init();
+void input_task(void *params) {
+    uint32_t gpio;
+    char msg[32];
 
-    printf("Inicializando GLX\n");
-    ssd1306_t disp;
-    gfx_init(&disp, 128, 32);
+    for(;;) {
+        if (xQueueReceive(xQueueInput, &gpio, pdMS_TO_TICKS(100))) {
+            // Mapeia botão para mensagem
+            if (gpio == BTN_GEAR_UP_PIN) {
+                strcpy(msg, "BTN_GEARUP");
+            } else if (gpio == BTN_GEAR_DOWN_PIN) {
+                strcpy(msg, "BTN_GEARDOWN");
+            } else if (gpio == BTN_HANDBRAKE_PIN) { 
+                strcpy(msg, "BTN_HANDBRAKE");
+            } else if (gpio == BTN_IGNITION_PIN) { 
+                strcpy(msg, "BTN_IGNITION");
+                xSemaphoreGive(xSemaphoreLed);
+            } else if (gpio == BTN_HORN_PIN) {
+                strcpy(msg, "BTN_HORN");
+            } else if (gpio == BTN_LIGHTS_PIN) {
+                strcpy(msg, "BTN_LIGHTS");
+            }
 
-    printf("Inicializando btn and LEDs\n");
-    oled1_btn_led_init();
+            xQueueSend(xQueueAction, msg, portMAX_DELAY);
+        }
 
-    char cnt = 15;
-    while (1) {
+        // Leitura periódica dos pedais
+        adc_select_input(0);  // Acelerador
+        uint16_t accel = adc_read();
+        adc_select_input(1);  // Freio
+        uint16_t brake = adc_read();
+        snprintf(msg, sizeof(msg), "PEDAL A:%u B:%u", accel, brake);
+        xQueueSend(xQueueAction, msg, portMAX_DELAY);
 
-        if (gpio_get(BTN_1_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_1_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 1 - ON");
-            gfx_show(&disp);
-        } else if (gpio_get(BTN_2_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_2_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 2 - ON");
-            gfx_show(&disp);
-        } else if (gpio_get(BTN_3_OLED) == 0) {
-            cnt = 15;
-            gpio_put(LED_3_OLED, 0);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "LED 3 - ON");
-            gfx_show(&disp);
-        } else {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
 
-            gpio_put(LED_1_OLED, 1);
-            gpio_put(LED_2_OLED, 1);
-            gpio_put(LED_3_OLED, 1);
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "PRESSIONE ALGUM");
-            gfx_draw_string(&disp, 0, 10, 1, "BOTAO");
-            gfx_draw_line(&disp, 15, 27, cnt,
-                          27);
-            vTaskDelay(pdMS_TO_TICKS(50));
-            if (++cnt == 112)
-                cnt = 15;
+void comunica_task(void *params) {
+    char buffer[32];
 
-            gfx_show(&disp);
+    for(;;) {
+        if (xQueueReceive(xQueueAction, buffer, portMAX_DELAY)) {
+            uart_puts(uart0, buffer);
+            uart_puts(uart0, "\r\n");
         }
     }
 }
 
-void oled1_demo_2(void *p) {
-    printf("Inicializando Driver\n");
-    ssd1306_init();
-
-    printf("Inicializando GLX\n");
-    ssd1306_t disp;
-    gfx_init(&disp, 128, 32);
-
-    printf("Inicializando btn and LEDs\n");
-    oled1_btn_led_init();
-
-    char cnt = 15;
-    while (1) {
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 1, "Mandioca");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 2, "Batata");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
-
-        gfx_clear_buffer(&disp);
-        gfx_draw_string(&disp, 0, 0, 4, "Inhame");
-        gfx_show(&disp);
-        vTaskDelay(pdMS_TO_TICKS(150));
+void led_task(void *params) {
+    for(;;) {
+        if (xSemaphoreTake(xSemaphoreLed, portMAX_DELAY) == pdTRUE) {
+            gpio_put(LED_IND_PIN, 1);
+            vTaskDelay(pdMS_TO_TICKS(200));
+            gpio_put(LED_IND_PIN, 0);
+        }
     }
 }
 
 int main() {
     stdio_init_all();
+    uart_init(uart0, UART_BAUD_RATE);
+    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
-    xTaskCreate(oled1_demo_2, "Demo 2", 4095, NULL, 1, NULL);
+    // Configura botões com pull-ups e IRQ
+    uint btn_pins[] = {BTN_GEAR_UP_PIN, BTN_GEAR_DOWN_PIN, BTN_HANDBRAKE_PIN, BTN_IGNITION_PIN, BTN_HORN_PIN, BTN_LIGHTS_PIN};
+    for (int i = 0; i < 6; i++) {
+        gpio_init(btn_pins[i]);
+        gpio_set_dir(btn_pins[i], GPIO_IN);
+        gpio_pull_up(btn_pins[i]);
+        gpio_set_irq_enabled_with_callback(btn_pins[i], GPIO_IRQ_EDGE_FALL, true, &btn_callback);
+    }
 
+    gpio_init(LED_IND_PIN);
+    gpio_set_dir(LED_IND_PIN, GPIO_OUT);
+    gpio_put(LED_IND_PIN, 0);
+
+    adc_init();
+    adc_gpio_init(ADC_ACCEL_PIN);
+    adc_gpio_init(ADC_BRAKE_PIN);
+
+    // filas e semáforo
+    xQueueInput   = xQueueCreate(10, sizeof(uint32_t));
+    xQueueAction  = xQueueCreate(10, sizeof(char[32]));
+    xSemaphoreLed = xSemaphoreCreateBinary();
+
+    // tasks
+    xTaskCreate(input_task, "InputTask", 1024, NULL, 2, NULL);
+    xTaskCreate(comunica_task, "ComunicaTask", 1024, NULL, 1, NULL);
+    xTaskCreate(led_task, "LedTask", 512, NULL, 1, NULL);
+
+    // scheduler
     vTaskStartScheduler();
 
-    while (true)
-        ;
+    while (1) {}
 }
