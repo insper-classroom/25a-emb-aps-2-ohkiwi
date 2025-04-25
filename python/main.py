@@ -4,25 +4,21 @@ import glob
 import time
 import serial
 from evdev import UInput, AbsInfo
-from evdev.ecodes import EV_ABS, EV_KEY, ABS_X, ABS_Y, ABS_Z, BTN_TRIGGER, BTN_THUMB, BTN_THUMB2, BTN_TOP, BTN_TOP2, BTN_PINKIE
+from evdev.ecodes import EV_ABS, EV_KEY, ABS_X, ABS_Y, ABS_Z, BTN_TRIGGER, BTN_THUMB, BTN_TOP, BTN_PINKIE
 
 # IDs recebidos pela UART (conforme RP2040)
-ID_STEERING   = 16
+ID_STEERING   = 15
 ID_ACCEL      = 26
 ID_BRAKE      = 27
 ID_GEAR_UP    = 2
 ID_GEAR_DOWN  = 3
-ID_HANDBRAKE  = 4
-ID_IGNITION   = 5
-ID_HORN       = 6
-ID_LIGHTS     = 7
+ID_IGNITION   = 4
+ID_LIGHTS     = 5
 
 BUTTON_MAP = {
     ID_GEAR_UP:   BTN_TRIGGER,
     ID_GEAR_DOWN: BTN_THUMB,
-    ID_HANDBRAKE: BTN_THUMB2,
     ID_IGNITION:  BTN_TOP,
-    ID_HORN:      BTN_TOP2,
     ID_LIGHTS:    BTN_PINKIE,
 }
 

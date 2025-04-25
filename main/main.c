@@ -10,13 +10,11 @@
 
 #define BTN_GEAR_UP_PIN 2
 #define BTN_GEAR_DOWN_PIN 3
-#define BTN_HANDBRAKE_PIN 4
-#define BTN_IGNITION_PIN 5
-#define BTN_HORN_PIN 6
-#define BTN_LIGHTS_PIN 7
-#define LED_IND_PIN 8
-#define ENCODER_CLK_PIN 16
-#define ENCODER_DT_PIN 17
+#define BTN_IGNITION_PIN 4
+#define BTN_LIGHTS_PIN 5
+#define LED_IND_PIN 7
+#define ENCODER_CLK_PIN 15
+#define ENCODER_DT_PIN 14
 #define ADC_ACCEL_PIN 26
 #define ADC_BRAKE_PIN 27
 #define UART_TX_PIN 0
@@ -85,19 +83,9 @@ void comunica_task(void *params) {
     }
 }
 
-void led_task(void *params) {
-    for(;;) {
-        if (xSemaphoreTake(xSemaphoreLed, portMAX_DELAY) == pdTRUE) {
-            gpio_put(LED_IND_PIN, 1);
-            vTaskDelay(pdMS_TO_TICKS(200));
-            gpio_put(LED_IND_PIN, 0);
-        }
-    }
-}
-
 void init_btns() {
-    int btn_pins[] = {BTN_GEAR_UP_PIN, BTN_GEAR_DOWN_PIN, BTN_HANDBRAKE_PIN, BTN_IGNITION_PIN, BTN_HORN_PIN, BTN_LIGHTS_PIN};
-    for (int i = 0; i < 6; i++) {
+    int btn_pins[] = {BTN_GEAR_UP_PIN, BTN_GEAR_DOWN_PIN, BTN_IGNITION_PIN, BTN_LIGHTS_PIN};
+    for (int i = 0; i < 4; i++) {
         gpio_init(btn_pins[i]);
         gpio_set_dir(btn_pins[i], GPIO_IN);
         gpio_pull_up(btn_pins[i]);
@@ -105,9 +93,7 @@ void init_btns() {
 
     gpio_set_irq_enabled_with_callback(BTN_GEAR_UP_PIN, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
     gpio_set_irq_enabled(BTN_GEAR_DOWN_PIN, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(BTN_HANDBRAKE_PIN, GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(BTN_IGNITION_PIN, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(BTN_HORN_PIN, GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(BTN_LIGHTS_PIN, GPIO_IRQ_EDGE_FALL, true);
 }
 
@@ -122,8 +108,11 @@ void encoder_task(void *p) {
         int dt_state = gpio_get(ENCODER_DT_PIN);
 
         if (last_clk_state == 1 && clk_state == 0) {
-            if (dt_state != clk_state) counter++;
-            else counter--;
+            if (dt_state != clk_state) {
+                counter = counter + 2;
+            } else {
+                counter = counter - 2;
+            }
 
             // Limita entre -50 e +50 (900 graus)
             if (counter > 50) counter = 50;
@@ -153,7 +142,7 @@ int main() {
 
     gpio_init(LED_IND_PIN);
     gpio_set_dir(LED_IND_PIN, GPIO_OUT);
-    gpio_put(LED_IND_PIN, 0);
+    gpio_put(LED_IND_PIN, 1);
 
     adc_init();
     adc_gpio_init(ADC_ACCEL_PIN);
@@ -176,7 +165,6 @@ int main() {
     xTaskCreate(input_task, "InputTask", 1024, NULL, 2, NULL);
     xTaskCreate(encoder_task, "EncoderTask", 1024, NULL, 1, NULL);
     xTaskCreate(comunica_task, "ComunicaTask", 1024, NULL, 1, NULL);
-    xTaskCreate(led_task, "LedTask", 512, NULL, 1, NULL);
 
     // scheduler
     vTaskStartScheduler();
