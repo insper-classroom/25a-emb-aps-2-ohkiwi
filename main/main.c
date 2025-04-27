@@ -98,36 +98,37 @@ void init_btns() {
 }
 
 void encoder_task(void *p) {
-    int last_clk_state = gpio_get(ENCODER_CLK_PIN);
+    int last_clk = gpio_get(ENCODER_CLK_PIN);
     int counter = 0;
     int last_sent = 0;
+    const int MAX_JUMP = 4;      // passos máximos permitidos por pulso
     uart_packet_t pkt;
 
     while (1) {
-        int clk_state = gpio_get(ENCODER_CLK_PIN);
-        int dt_state = gpio_get(ENCODER_DT_PIN);
+        int clk = gpio_get(ENCODER_CLK_PIN);
+        int dt  = gpio_get(ENCODER_DT_PIN);
 
-        if (last_clk_state == 1 && clk_state == 0) {
-            if (dt_state != clk_state) {
-                counter = counter + 2;
-            } else {
-                counter = counter - 2;
-            }
-
-            // Limita entre -50 e +50 (900 graus)
+        if (last_clk == 1 && clk == 0) {
+            // determina incremento bruto
+            int delta = (dt != clk) ? 2 : -2;
+            int tentative = counter + delta;
+            // limita salto máximo relativo ao último enviado
+            int diff = tentative - last_sent;
+            if (diff > MAX_JUMP)       tentative = last_sent + MAX_JUMP;
+            else if (diff < -MAX_JUMP) tentative = last_sent - MAX_JUMP;
+            counter = tentative;
+            // limita faixa total
             if (counter > 50) counter = 50;
             if (counter < -50) counter = -50;
-
-            // Só envia se mudou
+            // envia se mudou
             if (counter != last_sent) {
                 pkt.id = ENCODER_CLK_PIN;
-                pkt.value = counter + 50; // Transmitir como 0-100
+                pkt.value = (int16_t)(counter + 50);
                 xQueueSend(xQueueUART, &pkt, portMAX_DELAY);
                 last_sent = counter;
             }
         }
-
-        last_clk_state = clk_state;
+        last_clk = clk;
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }

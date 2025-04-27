@@ -3,6 +3,7 @@ import sys
 import glob
 import time
 import serial
+from collections import deque
 from evdev import UInput, AbsInfo
 from evdev.ecodes import EV_ABS, EV_KEY, ABS_X, ABS_Y, ABS_Z, BTN_TRIGGER, BTN_THUMB, BTN_TOP, BTN_PINKIE
 
@@ -44,6 +45,9 @@ def parse_pacote(buf):
 
 def controle_serial(ser):
     buf = bytearray()
+    # histórico de últimas N leituras do volante para média móvel
+    hist = deque(maxlen=5)
+
     while True:
         b = ser.read(1)
         if not b:
@@ -59,8 +63,11 @@ def controle_serial(ser):
 
             if tipo == ID_STEERING:
                 # valor 0–100 → ângulo –450…+450
-                ang = int((valor / 100) * 900 - 450)
-                device.write(EV_ABS, ABS_X, ang)
+                ang = (valor / 100) * 900 - 450
+                # adiciona ao histórico e calcula média móvel
+                hist.append(ang)
+                avg_ang = sum(hist) / len(hist)
+                device.write(EV_ABS, ABS_X, int(avg_ang))
 
             elif tipo == ID_ACCEL:
                 p = int((valor / 4095) * 1023)
