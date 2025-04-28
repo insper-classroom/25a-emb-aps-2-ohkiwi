@@ -1,7 +1,5 @@
 # Volante para Euro Truck Simulator
 
-![Protótipo do Volante](volante.png)
-
 ## Descrição do Projeto
 
 Este projeto consiste no desenvolvimento de um controle customizado em formato de volante para o jogo **Euro Truck Simulator**.
@@ -14,29 +12,22 @@ Este projeto consiste no desenvolvimento de um controle customizado em formato d
 
 Nosso controle é um volante de caminhão em escala reduzida mas com elementos realistas, incluindo:
 
-- Volante com rotação de 900 graus (2.5 voltas completas)
-- Pedais analógicos (acelerador, freio e embreagem)
-- Botões para funções essenciais como luzes, buzina, freio de mão, etc.
+- Volante com rotação
+- Pedais analógicos (acelerador e freio)
+- Botões para funções essenciais como luzes, ignição e troca de marcha.
 
 ## Inputs e Outputs
 
 ### Inputs (Sensores)
 
 1. **Entradas Analógicas:**
-   - **2x potenciômetros rotativos** para detectar a rotação do volante e a pressão no pedal do acelerador/freio.
+   - **2x potenciômetros rotativos** para detectar a pressão no pedal do acelerador/freio.
+   - **Enconder** para detectar rotação do volante.
 
 2. **Entradas Digitais:**
-   - Botões para troca de marcha
-   - Botão para o freio de mão
+   - 2 Botões para troca de marcha
    - Botão para ligar e desligar o caminhão
-   - Botão de buzina
    - Botão de luzes
-
-### Outputs (Atuadores)
-
-1. **Feedback Visual:**
-   - Display OLED pequeno para informações do jogo (velocidade, marcha atual)
-
 
 ### Outros componentes:
    - Botão de liga/desliga (status do controle)
@@ -44,26 +35,14 @@ Nosso controle é um volante de caminhão em escala reduzida mas com elementos r
 
 ## Protocolo de Comunicação
 
-O volante se comunica com o computador através de **USB** ou **Bluetooth**, utilizando o protocolo UART que envia as informações dos sensores e botões em tempo real. As entradas operam via **interrupções** da GPIO, garantindo baixa latência e resposta rápida.
+O volante se comunica com o computador através de **USB**, utilizando o protocolo UART que envia as informações dos sensores e botões em tempo real. As entradas operam via **interrupções** da GPIO, garantindo baixa latência e resposta rápida.
 
 ## Diagrama de Blocos do Firmware
 ![Diagrama de blocos do Firmware](volante.drawio.png)
 
-
-## Imagens do Projeto
-
 ### Design Proposto
-!!!
+![Protótipo do Volante](volante.png)
 
-### Protótipo Real
-!!!
-
-### Detalhes Internos
-!!!
-
-## Links Úteis
-
-- !!!
 
 
 ---

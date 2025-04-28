@@ -32,7 +32,6 @@ typedef struct {
 
 QueueHandle_t xQueueInput;
 QueueHandle_t xQueueUART;
-SemaphoreHandle_t xSemaphoreLed;
 
 void btn_callback(uint gpio, uint32_t events) {
     uint32_t pin = gpio;
@@ -160,7 +159,6 @@ int main() {
     // filas e semáforo
     xQueueInput = xQueueCreate(32, sizeof(uint32_t));
     xQueueUART = xQueueCreate(32, sizeof(uart_packet_t));
-    xSemaphoreLed = xSemaphoreCreateBinary();
 
     // tasks
     xTaskCreate(input_task, "InputTask", 1024, NULL, 2, NULL);
