@@ -8,30 +8,11 @@
 #include <semphr.h>
 #include <queue.h>
 
-#define BTN_GEAR_UP_PIN 2
-#define BTN_GEAR_DOWN_PIN 3
-#define BTN_IGNITION_PIN 4
-#define BTN_LIGHTS_PIN 5
-#define LED_IND_PIN 7
-#define ENCODER_CLK_PIN 15
-#define ENCODER_DT_PIN 14
-#define ADC_ACCEL_PIN 26
-#define ADC_BRAKE_PIN 27
-#define UART_TX_PIN 0
-#define UART_RX_PIN 1
-#define UART_BAUD_RATE 115200
-
-
-// Pacote
-# define EOP 0xFF
-
-typedef struct {
-    uint8_t id;
-    int16_t value;
-} uart_packet_t;
+#include "aux.h"
 
 QueueHandle_t xQueueInput;
 QueueHandle_t xQueueUART;
+SemaphoreHandle_t xSemaphoreLed;
 
 void btn_callback(uint gpio, uint32_t events) {
     uint32_t pin = gpio;
@@ -80,20 +61,6 @@ void comunica_task(void *params) {
             uart_write_blocking(uart0, buffer, sizeof(buffer));
         }
     }
-}
-
-void init_btns() {
-    int btn_pins[] = {BTN_GEAR_UP_PIN, BTN_GEAR_DOWN_PIN, BTN_IGNITION_PIN, BTN_LIGHTS_PIN};
-    for (int i = 0; i < 4; i++) {
-        gpio_init(btn_pins[i]);
-        gpio_set_dir(btn_pins[i], GPIO_IN);
-        gpio_pull_up(btn_pins[i]);
-    }
-
-    gpio_set_irq_enabled_with_callback(BTN_GEAR_UP_PIN, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
-    gpio_set_irq_enabled(BTN_GEAR_DOWN_PIN, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(BTN_IGNITION_PIN, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(BTN_LIGHTS_PIN, GPIO_IRQ_EDGE_FALL, true);
 }
 
 void encoder_task(void *p) {
@@ -159,6 +126,7 @@ int main() {
     // filas e semáforo
     xQueueInput = xQueueCreate(32, sizeof(uint32_t));
     xQueueUART = xQueueCreate(32, sizeof(uart_packet_t));
+    xSemaphoreLed = xSemaphoreCreateBinary();
 
     // tasks
     xTaskCreate(input_task, "InputTask", 1024, NULL, 2, NULL);
